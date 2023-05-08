@@ -1,59 +1,70 @@
-# name: Deploy App
+name: Deploy App
 
-# on:
-#   push:
-#     branches:
-#       - main
+on:
+  push:
+    branches:
+      - main
 
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
+env:
+  AWS_REGION: us-east-2
+  ECR_REPO: blocks57
+  KUBECONFIG: ${{ secrets.KUBECONFIG }}
 
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v2
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-#       - name: Setup Terraform
-#         uses: hashicorp/setup-terraform@v1
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
      
-      # - name: Terraform Init
-      #   working-directory: terraform
-      #   run: terraform init
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
 
-      # - name: Terraform Plan
-      #   working-directory: terraform
-      #   run: terraform plan
+      - name: Terraform Plan
+        working-directory: terraform
+        run: terraform plan
 
-      # - name: Terraform Apply
-      #   working-directory: terraform
-      #   run: terraform apply -auto-approve
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve
 
-#       - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v1
-#         with:
-#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: us-east-1
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-#       - name: Login to Amazon ECR
-#         id: login-ecr
-#         uses: aws-actions/amazon-ecr-login@v1
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t blocks .
+          docker tag blocks $ECR_REGISTRY/blocks57:blocks-latest
+          docker push $ECR_REGISTRY/blocks57:blocks-latest
+      
+      - uses: azure/setup-kubectl@v2.0
+        with:
+          version: 'v1.21.5' # default is latest stable
+        id: install
+        
+      - name: login to Cluster
+        working-directory: terraform
+        run: |
+          aws eks --region us-east-2 update-kubeconfig --name blocks57-eks
 
-#       - name: Build and push Docker image
-#         env:
-#           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-#         run: |
-#           docker build -t blocks .
-#           docker tag blocks $ECR_REGISTRY/blocks:blocks-latest
-#           docker push $ECR_REGISTRY/blocks:blocks-latest
-
-#       - name: Setup Ansible
-#         uses: ansible/ansible@v2.9.6
-#         with:
-#           ansible-version: 2.9.6
-
-#       - name: Deploy to Kubernetes
-#         env:
-#           KUBECONFIG: ${{ secrets.KUBECONFIG }}
-#         working-directory: deployment
-#         run: ansible-playbook ansible-deployment.yml
+      - name: Config kubectl and deploy new version
+        env:
+          DATE: ${{ env.DATE }}
+        run: |
+          kubectl apply -f kubernetes/deployment.yaml
+          kubectl get svc -o wide blocks-svc
