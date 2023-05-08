@@ -2,7 +2,7 @@
 **/.idea/
 *.terraform.lock.hcl
 **/.terraform/*
-
+.DS_Store
 # .tfstate files
 *.tfstate
 *.tfstate.*
