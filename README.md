@@ -11,38 +11,17 @@ Before you begin, you will need to have the following tools installed on your lo
 - Terraform
 - Docker
 
+create your state bucket on aws s3 service and modify if needed the `/terraform/terraform.tf` file
+
 Also you will need to create an s3 bucket to store the terraform state and put the name of this bucket in the `terraform/terraform.tf`
 
-![Architecture](images/eks-architecture.png
-)
+![Architecture](images/eks-architecture.png)
 
-## Creating the Infrastructure
+## In the end of this process you should see in your browser (YOU CAN PLAY PRESSING s)
 
-1. Navigate to the `terraform` directory and run `terraform init` to initialize the Terraform project.
+![Architecture](images/mario.jpeg)
 
-2. Run `terraform plan` to view the resources that will be created.
-
-3. Run `terraform apply` to create the infrastructure in AWS.
-
-## Building and Pushing the Docker Image
-
-1. Navigate to the root directory of the project.
-
-2. Run `aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com` to log in to your ECR repository.
-
-3. Run `docker build -t my-app .` to build the Docker image.
-
-4. Run `docker tag my-app <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com/blocks57:latest` to tag the Docker image.
-
-5. Run `docker push <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com/blocks57:latest` to push the Docker image to the registry.
-
-## Applying the kubernetes manifest
-
-1. Navigate to the `kubernetes` directory.
-
-2. Run `kubectl apply -f deployment.yaml` ¡
-
-## Pipeline
+## Pipeline (automated version to deploy)
 
 This project includes a GitHub Actions pipeline that performs the following steps:
 
@@ -52,4 +31,37 @@ This project includes a GitHub Actions pipeline that performs the following step
 
 3. Applies the kubernetes manifests to deploy the web app to the EKS cluster.
 
+4. look for the `EXTERNAL-IP` in your github actions pipeline, copy the endpoint, paste it in your browser finishing with `:8080` port and there you have your application running in your eks cluster
+
+![Architecture](images/svc.jpeg)
+
 To use the pipeline, create a new GitHub Actions workflow and reference the provided `pipeline.yml` file. Make sure to set the necessary environment variables in the workflow. (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY)
+
+If you want to reproduce this pipeline, first store your secrets in your github actions secrets and push all the content from this repo as forking wont allow you to run workflows.
+
+## Manual version to deploy 
+
+1. Navigate to the terraform directory of the project.
+
+2. store the following configuration to your ~/.aws/credentials file
+```
+[default]
+aws_access_key_id = <YOUR-KEY-ID>
+aws_secret_access_key = YOUR-ACCESS-KEY
+```
+
+3. `terraform init`, `terraform plan`, and `terraform apply` to create the infrastructure in AWS.
+
+4. Run `aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com` to log in to your ECR repository.
+
+5. Go back to the root folder and run `docker build -t my-app .` to build the Docker image.
+
+6. Run `docker tag my-app <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com/blocks57:latest` to tag the Docker image.
+
+7. Run `docker push <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com/blocks57:latest` to push the Docker image to the registry.
+
+8. Go to the `kubernetes` folder and run `aws eks --region us-east-2 update-kubeconfig --name blocks57-eks` to login to the eks cluster
+
+9. run `kubectl apply -f deployment.yaml`
+
+10. run `kubectl get svc -o wide blocks-svc` to get the endpoint where the app is exposed and concatenate it with `:8080`, paste the url in your browser and there it is
