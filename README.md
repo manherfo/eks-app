@@ -65,3 +65,11 @@ aws_secret_access_key = YOUR-ACCESS-KEY
 9. run `kubectl apply -f deployment.yaml`
 
 10. run `kubectl get svc -o wide blocks-svc` to get the endpoint where the app is exposed and concatenate it with `:8080`, paste the url in your browser and there it is
+
+## delete infrastructure
+
+1. make sure to delete all ecr images published
+
+2. make sure to delete the `/kubernetes/deployment.yaml` before destroy
+
+3. `terraform init`, `terraform destroy`  
