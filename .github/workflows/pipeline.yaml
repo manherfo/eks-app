@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - fix/pipeline
 
 env:
   AWS_REGION: us-east-2
