@@ -6,13 +6,15 @@ This project will guide you through the process of creating the infrastructure i
 
 Before you begin, you will need to have the following tools installed on your local machine:
 
-- Ansible
 - kubectl
 - AWS CLI
 - Terraform
 - Docker
 
-Also you will need to create an s3 bucket to store the terraform state and put the name of this bucket in the `terraform/terraform.tf` 
+Also you will need to create an s3 bucket to store the terraform state and put the name of this bucket in the `terraform/terraform.tf`
+
+![Architecture](images/eks-architecture.png
+)
 
 ## Creating the Infrastructure
 
@@ -34,11 +36,11 @@ Also you will need to create an s3 bucket to store the terraform state and put t
 
 5. Run `docker push <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com/blocks:latest` to push the Docker image to the registry.
 
-## Applying the Ansible Playbook
+## Applying the kubernetes manifest
 
 1. Navigate to the `kubernetes` directory.
 
-2. Run `ansible-playbook ansible-deployment.yml` to apply the Ansible playbook.
+2. Run `kubectl apply -f deployment.yaml` ¡
 
 ## Pipeline
 
@@ -48,6 +50,6 @@ This project includes a GitHub Actions pipeline that performs the following step
 
 2. Builds the Docker image and pushes it to the ECR repository.
 
-3. Applies the Ansible playbook to deploy the web app to the EKS cluster.
+3. Applies the kubernetes manifests to deploy the web app to the EKS cluster.
 
-To use the pipeline, create a new GitHub Actions workflow and reference the provided `pipeline.yml` file. Make sure to set the necessary environment variables in the workflow.
+To use the pipeline, create a new GitHub Actions workflow and reference the provided `pipeline.yml` file. Make sure to set the necessary environment variables in the workflow. (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY)
