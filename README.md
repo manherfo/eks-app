@@ -28,13 +28,13 @@ Also you will need to create an s3 bucket to store the terraform state and put t
 
 1. Navigate to the root directory of the project.
 
-2. Run `docker build -t my-app .` to build the Docker image.
+2. Run `aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com` to log in to your ECR repository.
 
-3. Run `aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com` to log in to your ECR repository.
+3. Run `docker build -t my-app .` to build the Docker image.
 
-4. Run `docker tag my-app <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com/blocks:latest` to tag the Docker image.
+4. Run `docker tag my-app <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com/blocks57:latest` to tag the Docker image.
 
-5. Run `docker push <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com/blocks:latest` to push the Docker image to the registry.
+5. Run `docker push <AWS-ACCOUNT>.dkr.ecr.us-east-2.amazonaws.com/blocks57:latest` to push the Docker image to the registry.
 
 ## Applying the kubernetes manifest
 
